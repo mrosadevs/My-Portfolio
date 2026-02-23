@@ -1,0 +1,301 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== ROOT VARIABLES ===== */
+:root {
+  --bg-primary: #030014;
+  --bg-secondary: #0a0a2e;
+  --accent-primary: #00ff88;
+  --accent-secondary: #6366f1;
+  --accent-tertiary: #06b6d4;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --glow-primary: rgba(0, 255, 136, 0.15);
+  --glow-secondary: rgba(99, 102, 241, 0.15);
+}
+
+/* ===== BASE ===== */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+@media (min-width: 768px) {
+  body {
+    cursor: none;
+  }
+  a, button, input, textarea, select {
+    cursor: none;
+  }
+}
+
+/* ===== CUSTOM SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 136, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 136, 0.5);
+}
+
+/* ===== SELECTION ===== */
+::selection {
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+}
+
+/* ===== SECTION STYLES ===== */
+.section-container {
+  @apply max-w-6xl mx-auto px-6 md:px-12 lg:px-24;
+}
+
+/* ===== GLOW EFFECTS ===== */
+.glow-text {
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.5), 0 0 40px rgba(0, 255, 136, 0.2);
+}
+
+.glow-text-subtle {
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.glow-border {
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.1), inset 0 0 15px rgba(0, 255, 136, 0.05);
+}
+
+.glow-border-hover:hover {
+  box-shadow: 0 0 25px rgba(0, 255, 136, 0.2), inset 0 0 25px rgba(0, 255, 136, 0.08);
+}
+
+/* ===== GLASSMORPHISM ===== */
+.glass {
+  background: rgba(10, 10, 46, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 255, 136, 0.08);
+}
+
+.glass-card {
+  background: rgba(15, 15, 40, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  background: rgba(20, 20, 55, 0.7);
+  border-color: rgba(0, 255, 136, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 255, 136, 0.08);
+  transform: translateY(-4px);
+}
+
+/* ===== GRADIENT TEXT ===== */
+.gradient-text {
+  background: linear-gradient(135deg, #00ff88, #06b6d4, #6366f1);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 8s ease infinite;
+}
+
+.gradient-text-static {
+  background: linear-gradient(135deg, #00ff88, #06b6d4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ===== ANIMATED UNDERLINE ===== */
+.hover-underline {
+  position: relative;
+}
+
+.hover-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #00ff88;
+  transition: width 0.3s ease;
+}
+
+.hover-underline:hover::after {
+  width: 100%;
+}
+
+/* ===== SECTION HEADER LINE ===== */
+.section-line::after {
+  content: '';
+  display: inline-block;
+  width: 200px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 255, 136, 0.3), transparent);
+  margin-left: 20px;
+  vertical-align: middle;
+}
+
+@media (max-width: 640px) {
+  .section-line::after {
+    width: 80px;
+  }
+}
+
+/* ===== LIST MARKERS ===== */
+.tech-list li {
+  position: relative;
+  padding-left: 20px;
+}
+
+.tech-list li::before {
+  content: '>';
+  position: absolute;
+  left: 0;
+  color: #00ff88;
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 14px;
+}
+
+/* ===== BACKGROUND GRID ===== */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ===== AMBIENT ORBS ===== */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.orb-green {
+  background: radial-gradient(circle, #00ff88, transparent 70%);
+}
+
+.orb-purple {
+  background: radial-gradient(circle, #6366f1, transparent 70%);
+}
+
+.orb-cyan {
+  background: radial-gradient(circle, #06b6d4, transparent 70%);
+}
+
+/* ===== MAGNETIC BUTTON ===== */
+.magnetic-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 36px;
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  border-radius: 4px;
+  color: #00ff88;
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.magnetic-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 255, 136, 0.08);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.magnetic-btn:hover::before {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.magnetic-btn:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.15);
+}
+
+/* ===== TAB STYLES ===== */
+.tab-btn {
+  position: relative;
+  padding: 12px 24px;
+  color: var(--text-secondary);
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 13px;
+  text-align: left;
+  transition: all 0.3s ease;
+  border-left: 2px solid rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.05);
+}
+
+.tab-btn.active {
+  color: #00ff88;
+  border-left-color: #00ff88;
+  background: rgba(0, 255, 136, 0.05);
+}
+
+/* ===== RESPONSIVE UTILITIES ===== */
+@media (max-width: 768px) {
+  .section-container {
+    @apply px-6;
+  }
+
+  .tab-btn {
+    border-left: none;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+    text-align: center;
+    padding: 12px 16px;
+  }
+
+  .tab-btn.active {
+    border-left: none;
+    border-bottom-color: #00ff88;
+  }
+}
+
+/* ===== NOISE OVERLAY ===== */
+.noise::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.015;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
