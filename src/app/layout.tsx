@@ -15,7 +15,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://mrosadev.online"),
+  metadataBase: new URL("https://mrosadev.site"),
   title: "Manuel Rosales | Software Engineer & Designer",
   description:
     "Portfolio of Manuel Rosales — Software Engineering student, designer, and developer. Building beautiful digital experiences with code and creativity.",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     title: "Manuel Rosales | Software Engineer & Designer",
     description:
       "Portfolio of Manuel Rosales — Software Engineering student, designer, and developer.",
-    url: "https://mrosadev.online",
+    url: "https://mrosadev.site",
     siteName: "Manuel Rosales",
     type: "website",
   },
