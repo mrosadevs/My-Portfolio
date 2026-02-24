@@ -10,7 +10,7 @@
 
 **A modern, animated developer portfolio showcasing projects, experience, and skills. Built with Next.js, TypeScript, and Tailwind CSS.**
 
-[🌐 Live Site](https://mrosadev.online)
+[🌐 Live Site](https://mrosadev.site)
 
 </div>
 
