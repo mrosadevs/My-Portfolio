@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "@/hooks/useInView";
 import SectionHeader from "./SectionHeader";
+import ProjectCover, {
+  type CoverPattern,
+  type CoverTone,
+} from "./ProjectCover";
 
 interface Project {
   title: string;
@@ -12,7 +15,8 @@ interface Project {
   tech: string[];
   github?: string;
   live?: string;
-  image: string;
+  /** Generated cover art, chosen to echo what the project actually does. */
+  cover: { pattern: CoverPattern; tone: CoverTone; tag: string };
 }
 
 const featuredProjects: Project[] = [
@@ -22,7 +26,7 @@ const featuredProjects: Project[] = [
       "Practice management software built for accounting firms. Run your whole firm from one place — clients, work pipeline, a drag-and-drop Kanban board, time tracking, invoicing, auto-computed tax deadlines, and a secure client portal.",
     tech: ["Next.js 16", "TypeScript", "Supabase", "Tailwind CSS 4", "React 19"],
     github: "https://github.com/mrosadevs/Accuracy-Flux",
-    image: "/projects/accuracy-flux.png",
+    cover: { pattern: "kanban", tone: "secondary", tag: "Practice Suite" },
   },
   {
     title: "Phantom Study",
@@ -31,7 +35,7 @@ const featuredProjects: Project[] = [
     tech: ["HTML/CSS/JS", "Supabase", "AI"],
     github: "https://github.com/mrosadevs/Phantom-Study",
     live: "https://study.mrosadev.site",
-    image: "/projects/phantom-study.png",
+    cover: { pattern: "cards", tone: "tertiary", tag: "AI Learning" },
   },
   {
     title: "Phantom Pulse",
@@ -39,7 +43,7 @@ const featuredProjects: Project[] = [
       "Electron desktop app that bridges QuickBooks Desktop and modern data workflows. Import CSVs, visualize financials with interactive Recharts dashboards, bulk-edit and clean transactions, then export polished Excel workbooks — wrapped in a dark cyberpunk UI.",
     tech: ["Electron 31", "React 18", "TypeScript", "Recharts", "Tailwind CSS"],
     github: "https://github.com/mrosadevs/Phantom-Pulse",
-    image: "/projects/phantom-pulse.png",
+    cover: { pattern: "bars", tone: "primary", tag: "Desktop App" },
   },
 ];
 
@@ -51,7 +55,7 @@ const otherProjects: Project[] = [
       "Personal AI agent system running 24/7. Routes requests through a smart model router across LM Studio, Claude, and Groq. Features overnight autonomous agents, persistent memory, a live dashboard, and Discord integration via FastAPI.",
     tech: ["Python", "FastAPI", "Discord.py", "Claude SDK", "LM Studio"],
     github: "https://github.com/mrosadevs/Phantom-Command-Center",
-    image: "/projects/phantom-command-center.png",
+    cover: { pattern: "nodes", tone: "primary", tag: "AI Agents" },
   },
   {
     title: "Phantom Launcher",
@@ -59,7 +63,7 @@ const otherProjects: Project[] = [
       "A modern Minecraft launcher with a glassmorphism UI. Rust-powered backend via Tauri 2 handles instance management, mod support, Microsoft OAuth, and JVM configuration — all wrapped in a React + TypeScript frontend.",
     tech: ["Tauri 2", "Rust", "React 18", "TypeScript", "Tailwind CSS"],
     github: "https://github.com/mrosadevs/Phantom-Launcher",
-    image: "/projects/phantom-launcher.png",
+    cover: { pattern: "blocks", tone: "secondary", tag: "Desktop App" },
   },
   {
     title: "Phantom Ledger",
@@ -68,7 +72,7 @@ const otherProjects: Project[] = [
     tech: ["React", "Vite", "Express", "Node.js"],
     github: "https://github.com/mrosadevs/Phantom-Ledger",
     live: "https://ledger.accuracycg.com",
-    image: "/projects/phantom-ledger.png",
+    cover: { pattern: "grid", tone: "primary", tag: "PDF to Excel" },
   },
   {
     title: "Phantom Finance",
@@ -76,7 +80,7 @@ const otherProjects: Project[] = [
       "A 100% offline personal budget tracker with 7 dedicated pages — Dashboard, Monthly Budget, Debt Tracker, Property, Annual Budget, Business, and Settings. Excel/JSON import-export and 245+ financial tips.",
     tech: ["JavaScript", "Vite", "CSS"],
     github: "https://github.com/mrosadevs/Phantom-Finance",
-    image: "/projects/phantom-finance.png",
+    cover: { pattern: "bars", tone: "tertiary", tag: "Offline Budget" },
   },
   {
     title: "Phantom Palette",
@@ -84,7 +88,7 @@ const otherProjects: Project[] = [
       "Zero-dependency color palette generator with 10 harmony modes. Lock colors, one-click copy, export to CSS/SCSS/Tailwind/JSON, PNG download, and full keyboard shortcuts.",
     tech: ["HTML", "CSS", "JavaScript"],
     github: "https://github.com/mrosadevs/Phantom-Palette",
-    image: "/projects/phantom-palette.png",
+    cover: { pattern: "palette", tone: "secondary", tag: "Design Tool" },
   },
   {
     title: "Phantom User",
@@ -92,7 +96,7 @@ const otherProjects: Project[] = [
       "Username generator producing clean, pronounceable names. 5 generation strategies, 6 vibe modes, case styles, seed words, and an animated particle background.",
     tech: ["HTML", "CSS", "JavaScript"],
     github: "https://github.com/mrosadevs/Phantom-User",
-    image: "/projects/phantom-user.png",
+    cover: { pattern: "terminal", tone: "tertiary", tag: "Generator" },
   },
   // Rest
   {
@@ -102,7 +106,7 @@ const otherProjects: Project[] = [
     tech: ["Next.js 14", "TypeScript", "Supabase", "Tailwind CSS"],
     github: "https://github.com/mrosadevs/Arisleydis-Realtor-Website",
     live: "https://arisleydisrealtor.com",
-    image: "/projects/arisleydis-realtor.png",
+    cover: { pattern: "skyline", tone: "secondary", tag: "Real Estate" },
   },
   {
     title: "Accuracy Consulting Website",
@@ -111,7 +115,7 @@ const otherProjects: Project[] = [
     tech: ["HTML", "CSS", "JavaScript"],
     github: "https://github.com/mrosadevs/Accuracy-Consulting-Website",
     live: "https://accuracycg.com",
-    image: "/projects/accuracy-consulting.png",
+    cover: { pattern: "wave", tone: "tertiary", tag: "Business Site" },
   },
   {
     title: "TaskGrid",
@@ -119,7 +123,7 @@ const otherProjects: Project[] = [
       "Desktop task manager built with a 3-person team. C++17 backend with a QML frontend, SQLite persistence, week/month calendar views, and Light/Dark/Cyber themes.",
     tech: ["C++17", "Qt Quick", "QML", "SQLite", "CMake"],
     github: "https://github.com/mrosadevs/TaskGrid",
-    image: "/projects/taskgrid.png",
+    cover: { pattern: "calendar", tone: "secondary", tag: "Native App" },
   },
   {
     title: "The Ultimate AI Stack",
@@ -127,7 +131,7 @@ const otherProjects: Project[] = [
       "Interactive single-file HTML guide synthesizing the best self-hosted AI setup — LM Studio with 30B local models, 8 MCP servers, 7 specialized agents, hybrid routing, and morning briefings.",
     tech: ["HTML", "CSS", "JavaScript"],
     github: "https://github.com/mrosadevs/The-Ultimate-AI-Stack",
-    image: "/projects/ultimate-ai-stack.png",
+    cover: { pattern: "stack", tone: "primary", tag: "Guide" },
   },
   {
     title: "Dino Sol",
@@ -136,7 +140,7 @@ const otherProjects: Project[] = [
     tech: ["HTML", "CSS", "JavaScript", "Canvas"],
     github: "https://github.com/mrosadevs/Dino-Sol",
     live: "https://dinosol.mrosadev.site",
-    image: "/projects/dino-sol.png",
+    cover: { pattern: "orbit", tone: "primary", tag: "NFT Landing" },
   },
   {
     title: "The Dodo NFT",
@@ -145,7 +149,7 @@ const otherProjects: Project[] = [
     tech: ["HTML", "CSS", "JavaScript"],
     github: "https://github.com/mrosadevs/The-Dodo-NFT",
     live: "https://dodonft.mrosadev.site",
-    image: "/projects/the-dodo-nft.png",
+    cover: { pattern: "wave", tone: "secondary", tag: "NFT Landing" },
   },
   {
     title: "The Flip Lounge",
@@ -154,7 +158,7 @@ const otherProjects: Project[] = [
     tech: ["HTML", "CSS", "JavaScript", "Canvas"],
     github: "https://github.com/mrosadevs/The-Flip-Lounge",
     live: "https://tfl.mrosadev.site",
-    image: "/projects/the-flip-lounge.png",
+    cover: { pattern: "terminal", tone: "secondary", tag: "Marketplace" },
   },
   {
     title: "Programming II Coursework",
@@ -162,7 +166,7 @@ const otherProjects: Project[] = [
       "7-assignment C++ coursework documenting progression through OOP — classes, constructors, arrays, vectors, pointers, inheritance, and polymorphism. Built with CMake.",
     tech: ["C++", "OOP", "CMake"],
     github: "https://github.com/mrosadevs/COP-3003-Programming-II",
-    image: "/projects/cop-3003.png",
+    cover: { pattern: "terminal", tone: "tertiary", tag: "Coursework" },
   },
 ];
 
@@ -205,15 +209,15 @@ function FeaturedProject({ project, index }: { project: Project; index: number }
             rel="noopener noreferrer"
             className="block relative group rounded-xl overflow-hidden"
           >
-            <div className="relative aspect-[40/21] rounded-xl overflow-hidden border border-white/5 group-hover:border-accent-primary/30 transition-colors duration-300">
-              <Image
-                src={project.image}
-                alt={project.title}
-                fill
-                className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-              <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300" />
+            <div className="relative aspect-[40/21] rounded-xl overflow-hidden border border-hairline group-hover:border-accent-primary/30 transition-colors duration-300">
+              <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.04]">
+                <ProjectCover
+                  pattern={project.cover.pattern}
+                  tone={project.cover.tone}
+                  tag={project.cover.tag}
+                  title={project.title}
+                />
+              </div>
             </div>
           </a>
         </div>
@@ -273,24 +277,24 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
         className="glass-card rounded-xl overflow-hidden h-full flex flex-col group block"
       >
         {/* Banner image — 1200×630 ratio = 40/21 */}
-        <div className="relative w-full aspect-[40/21] overflow-hidden">
-          <Image
-            src={project.image}
-            alt={project.title}
-            fill
-            className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+        <div className="relative w-full aspect-[40/21] overflow-hidden border-b border-hairline">
+          <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-[1.04]">
+            <ProjectCover
+              pattern={project.cover.pattern}
+              tone={project.cover.tone}
+              tag={project.cover.tag}
+              title={project.title}
+            />
+          </div>
           {/* Links */}
-          <div className="absolute top-3 right-3 flex gap-2">
+          <div className="absolute top-3 right-3 flex gap-2 z-10">
             {project.github && (
-              <span className="text-white/60 group-hover:text-accent-primary transition-colors drop-shadow-lg">
+              <span className="text-text-muted group-hover:text-accent-primary transition-colors">
                 <GitHubIcon />
               </span>
             )}
             {project.live && (
-              <span className="text-white/60 group-hover:text-accent-primary transition-colors drop-shadow-lg">
+              <span className="text-text-muted group-hover:text-accent-primary transition-colors">
                 <ExternalIcon />
               </span>
             )}

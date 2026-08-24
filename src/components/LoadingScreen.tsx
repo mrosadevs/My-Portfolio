@@ -55,7 +55,7 @@ export default function LoadingScreen() {
           </motion.div>
 
           {/* Progress bar */}
-          <div className="w-48 h-[2px] bg-white/5 rounded-full overflow-hidden">
+          <div className="w-48 h-[2px] bg-text-muted/20 rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-accent-primary to-accent-secondary rounded-full"
               initial={{ width: "0%" }}

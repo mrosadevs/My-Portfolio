@@ -1,125 +1,193 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { useEffect, useRef } from "react";
 
+/** Elements that should grow the ring when hovered. */
+const INTERACTIVE_SELECTOR =
+  "a, button, [role='button'], input, textarea, select, label, summary, .magnetic-btn, .glass-card, .tab-btn";
+
+const RING_SIZE = 32;
+const DOT_SIZE = 5;
+const RING_HOVER_SCALE = 1.55;
+
+/** Ring easing per frame. Higher = snappier and less "trailing". */
+const RING_EASE = 0.22;
+
+/**
+ * Custom cursor driven by a single rAF loop that writes transforms
+ * directly to the DOM.
+ *
+ * Deliberately avoids: React state per frame, framer-motion springs,
+ * animating width/height (layout on every frame), and mix-blend-difference
+ * (which forces the whole page to re-composite under the cursor and was
+ * the main source of the smeared trail).
+ */
 export default function CursorFollower() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const ringRef = useRef<HTMLDivElement>(null);
   const dotRef = useRef<HTMLDivElement>(null);
 
-  const cursorX = useMotionValue(-100);
-  const cursorY = useMotionValue(-100);
-
-  const springConfig = { damping: 25, stiffness: 200, mass: 0.5 };
-  const cursorXSpring = useSpring(cursorX, springConfig);
-  const cursorYSpring = useSpring(cursorY, springConfig);
-
   useEffect(() => {
-    // Detect touch device
-    const isTouch =
-      "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    setIsTouchDevice(isTouch);
-    if (isTouch) return;
+    // Only devices with a real pointer get a custom cursor. `pointer: fine`
+    // is a better test than `ontouchstart`, which is true on touch laptops
+    // that still have a mouse.
+    const finePointer = window.matchMedia("(pointer: fine)");
+    const wideEnough = window.matchMedia("(min-width: 768px)");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-    const handleMouseMove = (e: MouseEvent) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
-      if (!isVisible) setIsVisible(true);
+    if (!finePointer.matches || !wideEnough.matches || reducedMotion.matches) {
+      return;
+    }
+
+    const ring = ringRef.current;
+    const dot = dotRef.current;
+    if (!ring || !dot) return;
+
+    const root = document.documentElement;
+    root.classList.add("custom-cursor");
+
+    // Target = raw pointer. Ring lerps toward it; dot is pinned to it.
+    let targetX = -100;
+    let targetY = -100;
+    let ringX = -100;
+    let ringY = -100;
+
+    let hoverScale = 1;
+    let currentScale = 1;
+    let visible = false;
+    let frame = 0;
+    let running = true;
+
+    const setVisible = (next: boolean) => {
+      if (visible === next) return;
+      visible = next;
+      ring.style.opacity = next ? "1" : "0";
+      dot.style.opacity = next ? "1" : "0";
     };
 
-    const handleMouseEnter = () => setIsVisible(true);
-    const handleMouseLeave = () => setIsVisible(false);
+    const handleMove = (event: PointerEvent) => {
+      targetX = event.clientX;
+      targetY = event.clientY;
 
-    // Track hoverable elements
-    const handleElementHover = () => setIsHovering(true);
-    const handleElementLeave = () => setIsHovering(false);
+      if (!visible) {
+        // Jump rather than sweep in from the last known position,
+        // otherwise re-entering the window drags a long streak across it.
+        ringX = targetX;
+        ringY = targetY;
+        setVisible(true);
+      }
+    };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseenter", handleMouseEnter);
-    document.addEventListener("mouseleave", handleMouseLeave);
+    const handleLeave = (event: PointerEvent) => {
+      // relatedTarget is null only when the pointer truly exits the window.
+      if (!event.relatedTarget) setVisible(false);
+    };
 
-    // Add hover tracking to interactive elements
-    const interactiveSelectors =
-      "a, button, [role='button'], input, textarea, select, .magnetic-btn, .glass-card, .tab-btn";
-    const interactiveElements =
-      document.querySelectorAll(interactiveSelectors);
-    interactiveElements.forEach((el) => {
-      el.addEventListener("mouseenter", handleElementHover);
-      el.addEventListener("mouseleave", handleElementLeave);
-    });
+    const handleEnter = () => setVisible(true);
 
-    // MutationObserver for dynamically added elements
-    const observer = new MutationObserver(() => {
-      const newElements = document.querySelectorAll(interactiveSelectors);
-      newElements.forEach((el) => {
-        el.addEventListener("mouseenter", handleElementHover);
-        el.addEventListener("mouseleave", handleElementLeave);
-      });
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+    // Event delegation instead of attaching listeners to every element and
+    // re-querying the DOM through a MutationObserver. Works for nodes added
+    // later for free, and costs one listener total.
+    const handleOver = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      if (target?.closest?.(INTERACTIVE_SELECTOR)) hoverScale = RING_HOVER_SCALE;
+    };
+
+    const handleOut = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      if (!target?.closest?.(INTERACTIVE_SELECTOR)) return;
+
+      const next = event.relatedTarget as Element | null;
+      // Moving between children of the same interactive element still counts
+      // as hovering it — don't shrink on every internal boundary crossing.
+      if (next?.closest?.(INTERACTIVE_SELECTOR)) return;
+      hoverScale = 1;
+    };
+
+    const handleDown = () => {
+      dot.style.setProperty("--press", "0.7");
+    };
+    const handleUp = () => {
+      dot.style.setProperty("--press", "1");
+    };
+
+    const render = () => {
+      if (!running) return;
+
+      ringX += (targetX - ringX) * RING_EASE;
+      ringY += (targetY - ringY) * RING_EASE;
+      currentScale += (hoverScale - currentScale) * 0.18;
+
+      // translate3d keeps this on the compositor; scale() replaces the
+      // old width/height animation so no layout is triggered.
+      ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%) scale(${currentScale})`;
+      dot.style.transform = `translate3d(${targetX}px, ${targetY}px, 0) translate(-50%, -50%) scale(var(--press, 1))`;
+
+      frame = requestAnimationFrame(render);
+    };
+
+    // A background tab shouldn't burn frames.
+    const handleVisibility = () => {
+      if (document.hidden) {
+        running = false;
+        cancelAnimationFrame(frame);
+      } else if (!running) {
+        running = true;
+        frame = requestAnimationFrame(render);
+      }
+    };
+
+    window.addEventListener("pointermove", handleMove, { passive: true });
+    window.addEventListener("pointerdown", handleDown, { passive: true });
+    window.addEventListener("pointerup", handleUp, { passive: true });
+    document.addEventListener("pointerover", handleOver, { passive: true });
+    document.addEventListener("pointerout", handleOut, { passive: true });
+    document.addEventListener("pointerenter", handleEnter, { passive: true });
+    document.addEventListener("pointerleave", handleLeave, { passive: true });
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    frame = requestAnimationFrame(render);
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseenter", handleMouseEnter);
-      document.removeEventListener("mouseleave", handleMouseLeave);
-      interactiveElements.forEach((el) => {
-        el.removeEventListener("mouseenter", handleElementHover);
-        el.removeEventListener("mouseleave", handleElementLeave);
-      });
-      observer.disconnect();
+      running = false;
+      cancelAnimationFrame(frame);
+      root.classList.remove("custom-cursor");
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerdown", handleDown);
+      window.removeEventListener("pointerup", handleUp);
+      document.removeEventListener("pointerover", handleOver);
+      document.removeEventListener("pointerout", handleOut);
+      document.removeEventListener("pointerenter", handleEnter);
+      document.removeEventListener("pointerleave", handleLeave);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [cursorX, cursorY, isVisible]);
-
-  if (isTouchDevice) return null;
+  }, []);
 
   return (
     <>
-      {/* Outer ring */}
-      <motion.div
+      <div
+        ref={ringRef}
+        aria-hidden="true"
+        className="pointer-events-none fixed left-0 top-0 z-[9999] hidden rounded-full border border-accent-primary/50 opacity-0 md:block"
+        style={{
+          width: RING_SIZE,
+          height: RING_SIZE,
+          transform: "translate3d(-100px, -100px, 0)",
+          transition: "opacity 200ms ease, border-color 300ms ease",
+          willChange: "transform",
+        }}
+      />
+      <div
         ref={dotRef}
-        className="fixed top-0 left-0 pointer-events-none z-[9999] mix-blend-difference hidden md:block"
+        aria-hidden="true"
+        className="pointer-events-none fixed left-0 top-0 z-[9999] hidden rounded-full bg-accent-primary opacity-0 md:block"
         style={{
-          x: cursorXSpring,
-          y: cursorYSpring,
-          translateX: "-50%",
-          translateY: "-50%",
+          width: DOT_SIZE,
+          height: DOT_SIZE,
+          transform: "translate3d(-100px, -100px, 0)",
+          transition: "opacity 150ms ease",
+          willChange: "transform",
         }}
-        animate={{
-          width: isHovering ? 48 : 32,
-          height: isHovering ? 48 : 32,
-          opacity: isVisible ? 1 : 0,
-        }}
-        transition={{ duration: 0.2 }}
-      >
-        <div
-          className={`w-full h-full rounded-full border transition-all duration-300 ${
-            isHovering
-              ? "border-accent-primary/60 bg-accent-primary/10 scale-100"
-              : "border-accent-primary/30 bg-transparent scale-100"
-          }`}
-        />
-      </motion.div>
-
-      {/* Center dot */}
-      <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[9999] hidden md:block"
-        style={{
-          x: cursorX,
-          y: cursorY,
-          translateX: "-50%",
-          translateY: "-50%",
-        }}
-        animate={{
-          width: isHovering ? 6 : 4,
-          height: isHovering ? 6 : 4,
-          opacity: isVisible ? 1 : 0,
-        }}
-        transition={{ duration: 0.15 }}
-      >
-        <div className="w-full h-full rounded-full bg-accent-primary" />
-      </motion.div>
+      />
     </>
   );
 }

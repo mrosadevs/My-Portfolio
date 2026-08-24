@@ -128,7 +128,7 @@ export default function Experience() {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="mt-16 pt-12 border-t border-white/5"
+            className="mt-16 pt-12 border-t border-hairline"
           >
             <h3 className="text-lg font-semibold text-text-primary mb-6 font-mono">
               <span className="text-accent-primary">~</span> Education

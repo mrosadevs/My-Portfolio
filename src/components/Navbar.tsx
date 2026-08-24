@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import ThemeToggle from "./ThemeToggle";
 
 const navLinks = [
   { name: "About", href: "#about" },
@@ -16,22 +17,36 @@ export default function Navbar() {
   const [activeSection, setActiveSection] = useState("");
 
   useEffect(() => {
-    const handleScroll = () => {
+    const sections = navLinks.map((link) => link.href.slice(1));
+    let ticking = false;
+
+    const measure = () => {
+      ticking = false;
+      // Only write state when the value actually changes; the old handler
+      // called setState on every scroll event, re-rendering the whole nav
+      // (and its motion children) dozens of times per second.
       setIsScrolled(window.scrollY > 50);
 
-      const sections = navLinks.map((link) => link.href.slice(1));
       for (let i = sections.length - 1; i >= 0; i--) {
         const el = document.getElementById(sections[i]);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= 150) {
-            setActiveSection(sections[i]);
-            break;
-          }
+        if (!el) continue;
+        if (el.getBoundingClientRect().top <= 150) {
+          setActiveSection((current) =>
+            current === sections[i] ? current : sections[i]
+          );
+          break;
         }
       }
     };
 
+    const handleScroll = () => {
+      // Coalesce bursts of scroll events into one layout read per frame.
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(measure);
+    };
+
+    measure();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -99,23 +114,34 @@ export default function Navbar() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.4 }}
+              className="ml-3"
+            >
+              <ThemeToggle />
+            </motion.li>
+            <motion.li
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55, duration: 0.4 }}
             >
               <a
                 href="/Manuel_Rosales_Resume.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="magnetic-btn ml-4 !py-2 !px-5 text-xs"
+                className="magnetic-btn ml-3 !py-2 !px-5 text-xs"
               >
                 Resume
               </a>
             </motion.li>
           </ul>
 
-          {/* Mobile Toggle */}
-          <button
+          {/* Mobile controls */}
+          <div className="md:hidden flex items-center gap-3">
+            <ThemeToggle />
+            <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden relative w-8 h-8 flex flex-col items-center justify-center gap-1.5 z-50"
+            className="relative w-8 h-8 flex flex-col items-center justify-center gap-1.5 z-50"
             aria-label="Toggle menu"
+            aria-expanded={isMobileMenuOpen}
           >
             <motion.span
               animate={{
@@ -135,7 +161,8 @@ export default function Navbar() {
               }}
               className="w-6 h-[2px] bg-accent-primary block origin-center transition-colors"
             />
-          </button>
+            </button>
+          </div>
         </div>
       </motion.nav>
 
@@ -158,7 +185,7 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute right-0 top-0 bottom-0 w-72 bg-bg-secondary/95 backdrop-blur-xl border-l border-white/5 flex flex-col items-center justify-center gap-8"
+              className="absolute right-0 top-0 bottom-0 w-72 bg-bg-secondary/95 backdrop-blur-xl border-l border-hairline flex flex-col items-center justify-center gap-8"
             >
               {navLinks.map((link, i) => (
                 <motion.button

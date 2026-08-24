@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider, themeInitScript } from "@/components/ThemeProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -46,14 +47,36 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  // Both entries are sent so the browser chrome tracks whichever theme is
+  // active, rather than being pinned to the old hard-coded dark value.
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#030014" },
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
-      <body className="font-sans antialiased noise">{children}</body>
+    <html
+      lang="en"
+      className={`${inter.variable} ${jetbrains.variable}`}
+      // The init script sets this before paint; suppress the mismatch
+      // warning for the one attribute it owns.
+      suppressHydrationWarning
+    >
+      <head>
+        {/* Blocking on purpose: it must run before first paint, otherwise
+            a light-mode visitor gets a dark flash on every navigation. */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
+      <body className="font-sans antialiased noise">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

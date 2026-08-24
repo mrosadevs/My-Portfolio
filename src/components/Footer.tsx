@@ -44,7 +44,7 @@ const socials = [
 
 export default function Footer() {
   return (
-    <footer className="relative py-12 border-t border-white/5">
+    <footer className="relative py-12 border-t border-hairline">
       <div className="section-container">
         {/* Side social links - visible on larger screens */}
         <div className="hidden lg:flex fixed bottom-0 left-8 xl:left-12 flex-col items-center gap-6 z-40">
